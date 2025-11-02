@@ -13,9 +13,17 @@ st.set_page_config(
 )
 
 st.title('🍱 Analisis Gizi Seimbang Makan Bergizi Gratis')
-st.write("Unggah gambar nampan makanan Anda. Aplikasi ini akan menganalisis pemenuhan gizinya berdasarkan porsi 'Makan Siang' (30%) dari Angka Kecukupan Gizi (AKG) Kemenkes.")
+st.write("Unggah gambar nampan makanan Anda. Aplikasi akan menganalisis pemenuhan gizinya berdasarkan porsi 'Makan Siang' (30%) dari Angka Kecukupan Gizi (AKG) Kemenkes.")
 
 akg_profiles = {
+    "Anak PAUD (1-3 Tahun)": {
+        'Energi (kkal)': 1350, 'Protein (g)': 20, 'Lemak (g)': 45, 'Karbohidrat (g)': 215, 'Serat (g)': 19,
+        'Kolin (mg)': 200, 'Folat (µg)': 160
+    },
+    "Anak TK (4-6 Tahun)": {
+        'Energi (kkal)': 1400, 'Protein (g)': 25, 'Lemak (g)': 50, 'Karbohidrat (g)': 220, 'Serat (g)': 20,
+        'Kolin (mg)': 250, 'Folat (µg)': 200
+    },
     "Anak SD (7-12 Tahun)": {
         'Energi (kkal)': 1600, 'Protein (g)': 40, 'Lemak (g)': 60, 'Karbohidrat (g)': 275, 'Serat (g)': 26,
         'Kolin (mg)': 250, 'Folat (µg)': 300 
@@ -36,6 +44,7 @@ akg_profiles = {
 
 
 PORSI_MAKAN_SIANG = 0.30
+
 data_gizi = {
     'nama_makanan': [
         'nasi_putih', 'ayam', 'nasi_kuning', 'nasi_liwet', 'buah_jeruk', 
@@ -43,35 +52,35 @@ data_gizi = {
         'sayur_wortel_kacang', 'sayur', 'wortel', 'susu', 'tahu', 'tempe', 
         'tempe_bacem', 'ayam_kecap', 'buah_semangka',
         'roti', 'burger', 'omelet', 'nasi_labu_kuning', 'stik_singkong_labu',
-        'oregano', 'ikan','buah_pepaya', 'buah_nanas', 'buah_kelengkeng'
+        'oregano', 'ikan'
     ],
     'Energi (kkal)': [
         140, 250, 180, 190, 70, 34, 105, 70, 80, 60, 50, 41, 80, 80, 100, 110, 220, 45,
-        130, 450, 150, 160, 180, 5, 180,43, 50, 60
+        130, 450, 150, 160, 180, 5, 180
     ],
     'Protein (g)': [
         3, 25, 4, 4.5, 1.5, 0.8, 1.3, 1, 4, 2.5, 2, 0.9, 4, 7, 9, 10, 23, 0.9,
-        4.5, 25, 13, 3.5, 3, 0.1, 22, 0.5, 0.5, 1.3
+        4.5, 25, 13, 3.5, 3, 0.1, 22
     ],
     'Lemak (g)': [
         0.3, 15, 5, 6, 0.2, 0.2, 0.4, 0.2, 4, 3, 2.5, 0.2, 4.5, 6, 6, 5, 10, 0.2,
-        1.5, 20, 10, 3, 7, 0.1, 10,0.3, 0.1, 0.1
+        1.5, 20, 10, 3, 7, 0.1, 10
     ],
     'Karbohidrat (g)': [
         30, 2, 30, 31, 18, 8, 27, 17, 9, 7, 6, 10, 6, 2, 8, 10, 10, 11,
-        25, 30, 2, 28, 25, 1, 0,11, 13, 15
+        25, 30, 2, 28, 25, 1, 0
     ],
     'Serat (g)': [
         0.5, 0, 1, 1, 3.5, 0.9, 3.1, 4, 3.5, 3, 3, 2.8, 0, 1, 1.5, 1.4, 0.5, 0.6,
-        2, 4, 0.5, 2.5, 4, 0.2, 0,1.7, 1.4, 1.1
+        2, 4, 0.5, 2.5, 4, 0.2, 0
     ],
     'Kolin (mg)': [
         2, 75, 3, 3, 8, 7, 10, 5, 30, 20, 15, 6, 20, 25, 30, 30, 70, 4,
-        10, 80, 290, 12, 15, 0.1, 60,6.1, 5.5, 8.5
+        10, 80, 290, 12, 15, 0.1, 60
     ],
     'Folat (µg)': [
         5, 8, 6, 6, 30, 20, 20, 10, 40, 45, 30, 15, 6, 20, 25, 25, 8, 3,
-        40, 60, 50, 25, 30, 1, 10,37, 18, 14
+        40, 60, 50, 25, 30, 1, 10
     ]
 }
 
