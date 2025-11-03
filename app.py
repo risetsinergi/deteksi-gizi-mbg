@@ -24,16 +24,20 @@ akg_profiles = {
         'Energi (kkal)': 1400, 'Protein (g)': 25, 'Lemak (g)': 50, 'Karbohidrat (g)': 220, 'Serat (g)': 20,
         'Kolin (mg)': 250, 'Folat (µg)': 200
     },
-    "Anak SD (7-12 Tahun)": {
-        'Energi (kkal)': 1600, 'Protein (g)': 40, 'Lemak (g)': 60, 'Karbohidrat (g)': 275, 'Serat (g)': 26,
+    "Anak SD (7-9 Tahun)": {
+        'Energi (kkal)': 1650, 'Protein (g)': 40, 'Lemak (g)': 55, 'Karbohidrat (g)': 250, 'Serat (g)': 23,
+        'Kolin (mg)': 250, 'Folat (µg)': 300 
+    },
+    "Anak SD (10-12 Tahun)": {
+        'Energi (kkal)': 1950, 'Protein (g)': 52, 'Lemak (g)': 65, 'Karbohidrat (g)': 290, 'Serat (g)': 27,
         'Kolin (mg)': 250, 'Folat (µg)': 300 
     },
     "Anak SMP (13-15 Tahun)": {
-        'Energi (kkal)': 2000, 'Protein (g)': 60, 'Lemak (g)': 75, 'Karbohidrat (g)': 325, 'Serat (g)': 32,
+        'Energi (kkal)': 2200, 'Protein (g)': 67, 'Lemak (g)': 75, 'Karbohidrat (g)': 330, 'Serat (g)': 32,
         'Kolin (mg)': 375, 'Folat (µg)': 400 
     },
     "Anak SMA (16-18 Tahun)": {
-        'Energi (kkal)': 2200, 'Protein (g)': 65, 'Lemak (g)': 78, 'Karbohidrat (g)': 350, 'Serat (g)': 33,
+        'Energi (kkal)': 2350, 'Protein (g)': 70, 'Lemak (g)': 77, 'Karbohidrat (g)': 350, 'Serat (g)': 33,
         'Kolin (mg)': 400, 'Folat (µg)': 400 
     },
     "Ibu Hamil (Trimester 2 & 3)": {
