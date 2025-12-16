@@ -4,7 +4,7 @@ import pandas as pd
 from ultralytics import YOLO
 import numpy as np
 
-# --- PENGATURAN DASAR & DATA ---
+# --- PENGATURAN DASAR & KONFIGURASI ---
 
 st.set_page_config(
     page_title="Analisis Gizi Makan Siang",
@@ -12,8 +12,12 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title('🍱 Analisis Gizi Seimbang Makan Bergizi Gratis')
-st.write("Unggah gambar nampan makanan Anda. Aplikasi akan menganalisis pemenuhan gizinya berdasarkan porsi 'Makan Siang' (30%) dari Angka Kecukupan Gizi (AKG) Kemenkes.")
+# --- KONFIGURASI SANDI ---
+# Mengambil password dari st.secrets
+CORRECT_PASSWORD = st.secrets["APP_PASSWORD"]
+
+# --- DATA (DEFINISI KONSTANTA) ---
+# Data diletakkan di luar fungsi agar tidak di-load ulang setiap interaksi
 
 akg_profiles = {
     "Anak PAUD (1-3 Tahun)": {
@@ -45,7 +49,6 @@ akg_profiles = {
         'Kolin (mg)': 450, 'Folat (µg)': 600 
     }
 }
-
 
 PORSI_MAKAN_SIANG = 0.30
 
@@ -91,107 +94,142 @@ data_gizi = {
 df_gizi = pd.DataFrame(data_gizi)
 all_known_foods = sorted(list(data_gizi['nama_makanan'])) 
 
-# --- FUNGSI & MODEL ---
+# --- FUNGSI LOAD MODEL ---
 @st.cache_resource
 def load_model(model_path):
     model = YOLO(model_path)
     return model
 
-try:
-    model = load_model('best.pt')
-except Exception as e:
-    st.error(f"Error memuat model: {e}. Pastikan file 'best.pt' ada di folder yang sama dengan app.py")
-    st.stop()
+# --- FUNGSI UTAMA APLIKASI (MAIN APP) ---
+def main_app():
+    # Judul dan Deskripsi
+    st.title('🍱 Analisis Gizi Seimbang Makan Bergizi Gratis')
+    st.write("Unggah gambar nampan makanan Anda. Aplikasi akan menganalisis pemenuhan gizinya berdasarkan porsi 'Makan Siang' (30%) dari Angka Kecukupan Gizi (AKG) Kemenkes.")
 
-# --- TAMPILAN UTAMA APLIKASI ---
+    # Load Model di dalam main_app (atau panggil fungsi load yang sudah di-cache)
+    try:
+        model = load_model('best.pt')
+    except Exception as e:
+        st.error(f"Error memuat model: {e}. Pastikan file 'best.pt' ada di folder yang sama dengan app.py")
+        st.stop()
 
-st.subheader("Pilih Profil Gizi")
-profile_choice = st.selectbox(
-    "Pilih profil AKG Harian:",
-    options=list(akg_profiles.keys()),
-    index=0,
-    label_visibility="visible" 
-)
+    # --- TAMPILAN UTAMA APLIKASI ---
 
-akg_harian = akg_profiles[profile_choice]
-porsi_makan = PORSI_MAKAN_SIANG
+    st.subheader("Pilih Profil Gizi")
+    profile_choice = st.selectbox(
+        "Pilih profil AKG Harian:",
+        options=list(akg_profiles.keys()),
+        index=0,
+        label_visibility="visible" 
+    )
 
-st.subheader("Unggah Gambar Makananmu")
-uploaded_file = st.file_uploader("Unggah gambar di sini...", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
+    akg_harian = akg_profiles[profile_choice]
+    porsi_makan = PORSI_MAKAN_SIANG
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    col_img, col_res = st.columns(2)
+    st.subheader("Unggah Gambar Makananmu")
+    uploaded_file = st.file_uploader("Unggah gambar di sini...", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
 
-    with col_img:
-        st.image(image, caption='Gambar yang diunggah.', use_container_width=True)
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file)
+        col_img, col_res = st.columns(2)
 
-    with col_res:
-        st.subheader("🔍 Hasil Analisis")
-        with st.spinner('Model sedang menganalisis gambar...'):
-            results = model(image)
-            
-            detected_objects = set()
-            for r in results:
-                for box in r.boxes:
-                    class_name = model.names[int(box.cls)]
-                    detected_objects.add(class_name)
-            
-            if detected_objects:
-                st.success(f"**Otomatis terdeteksi:** {', '.join(list(detected_objects))}")
-            else:
-                st.info("Model tidak mendeteksi item apapun. Silakan tambahkan secara manual.")
+        with col_img:
+            st.image(image, caption='Gambar yang diunggah.', use_container_width=True)
 
-            st.write("---")
-            st.subheader("Koreksi & Konfirmasi Manual")
-            
-            detected_list = list(detected_objects) 
-            
-            final_food_list = st.multiselect(
-                "Periksa hasil deteksi. Tambah/hapus item untuk konfirmasi manual:",
-                options=all_known_foods,
-                default=detected_list  
-            )
-            
-            if final_food_list:
+        with col_res:
+            st.subheader("🔍 Hasil Analisis")
+            with st.spinner('Model sedang menganalisis gambar...'):
+                results = model(image)
                 
-                final_food_set = set(final_food_list)
+                detected_objects = set()
+                for r in results:
+                    for box in r.boxes:
+                        class_name = model.names[int(box.cls)]
+                        detected_objects.add(class_name)
                 
-                estimasi = df_gizi[df_gizi['nama_makanan'].isin(final_food_set)]
-                total_gizi_makanan = estimasi.sum(numeric_only=True)
-                
-                st.write("---")
-                st.subheader("📊 Estimasi Kandungan Gizi Final")
-                st.dataframe(total_gizi_makanan.rename('Total Estimasi').to_frame())
-                
-                st.write("---")
-                st.subheader(f"📈 Analisis Pemenuhan Gizi Makan Bergizi Gratis")
-                st.write(f"Target gizi untuk **Makan Bergizi Gratis** (estimasi {porsi_makan*100:.0f}% dari total harian {profile_choice}).")
-                
-                komponen_kurang = [] 
-                
-                for gizi, nilai_harian in akg_harian.items():
-                    target_gizi_porsi = nilai_harian * porsi_makan
-                    nilai_aktual = total_gizi_makanan.get(gizi, 0)
-                    persentase = (nilai_aktual / target_gizi_porsi) * 100 if target_gizi_porsi > 0 else 0
-                    
-                    st.write(f"**{gizi}:** {nilai_aktual:.1f} / **{target_gizi_porsi:.1f}** ({persentase:.1f}%)")
-                    st.progress(int(min(persentase, 100)))
-                    
-                    if persentase < 100:
-                        nama_gizi_bersih = gizi.split(' ')[0].lower() 
-                        komponen_kurang.append(nama_gizi_bersih)
-
-                
-                st.write("---")
-                st.subheader("📜 Kesimpulan")
-                
-                if not komponen_kurang:
-                    st.success("🎉 **Luar biasa!** Kebutuhan gizi untuk makan siang Anda sudah **Terpenuhi Sempurna** untuk semua komponen.")
+                if detected_objects:
+                    st.success(f"**Otomatis terdeteksi:** {', '.join(list(detected_objects))}")
                 else:
-                    komponen_string = ", ".join(komponen_kurang)
-                    st.warning(f"**Perhatian:** Porsi makan siang Anda masih **belum memenuhi target** untuk komponen: **{komponen_string}**.")
-                    st.info("Pastikan untuk melengkapi kebutuhan gizi ini di waktu makan lainnya atau dengan menambahkan porsi.")
-            
-            else:
-                st.warning("Tidak ada makanan yang dipilih untuk dianalisis.")
+                    st.info("Model tidak mendeteksi item apapun. Silakan tambahkan secara manual.")
+
+                st.write("---")
+                st.subheader("Koreksi & Konfirmasi Manual")
+                
+                detected_list = list(detected_objects) 
+                
+                final_food_list = st.multiselect(
+                    "Periksa hasil deteksi. Tambah/hapus item untuk konfirmasi manual:",
+                    options=all_known_foods,
+                    default=detected_list  
+                )
+                
+                if final_food_list:
+                    
+                    final_food_set = set(final_food_list)
+                    
+                    estimasi = df_gizi[df_gizi['nama_makanan'].isin(final_food_set)]
+                    total_gizi_makanan = estimasi.sum(numeric_only=True)
+                    
+                    st.write("---")
+                    st.subheader("📊 Estimasi Kandungan Gizi")
+                    st.dataframe(total_gizi_makanan.rename('Total Estimasi').to_frame())
+                    
+                    st.write("---")
+                    st.subheader(f"📈 Analisis Pemenuhan Gizi Makan Bergizi Gratis")
+                    st.write(f"Target gizi untuk **Makan Bergizi Gratis** (estimasi {porsi_makan*100:.0f}% dari total harian {profile_choice}).")
+                    
+                    komponen_kurang = [] 
+                    
+                    for gizi, nilai_harian in akg_harian.items():
+                        target_gizi_porsi = nilai_harian * porsi_makan
+                        nilai_aktual = total_gizi_makanan.get(gizi, 0)
+                        persentase = (nilai_aktual / target_gizi_porsi) * 100 if target_gizi_porsi > 0 else 0
+                        
+                        st.write(f"**{gizi}:** {nilai_aktual:.1f} / **{target_gizi_porsi:.1f}** ({persentase:.1f}%)")
+                        st.progress(int(min(persentase, 100)))
+                        
+                        if persentase < 100:
+                            nama_gizi_bersih = gizi.split(' ')[0].lower() 
+                            komponen_kurang.append(nama_gizi_bersih)
+
+                    
+                    st.write("---")
+                    st.subheader("📜 Kesimpulan")
+                    
+                    if not komponen_kurang:
+                        st.success("🎉 **Luar biasa!** Kebutuhan gizi untuk makan siang Anda sudah **Terpenuhi Sempurna** untuk semua komponen.")
+                    else:
+                        komponen_string = ", ".join(komponen_kurang)
+                        st.warning(f"**Perhatian:** Porsi makan siang Anda masih **belum memenuhi target** untuk komponen: **{komponen_string}**.")
+                        st.info("Pastikan untuk melengkapi kebutuhan gizi ini di waktu makan lainnya atau dengan menambahkan porsi.")
+                
+                else:
+                    st.warning("Tidak ada makanan yang dipilih untuk dianalisis.")
+
+# --- FUNGSI LOGIN ---
+def show_login_page():
+    with st.container():
+        st.title("🔐 Halaman Terproteksi")
+        st.write("Aplikasi Analisis Gizi ini diproteksi. Silakan masukkan sandi.")
+        
+        with st.form("login_form"):
+            password = st.text_input("Sandi", type="password")
+            submitted = st.form_submit_button("Masuk")
+
+            if submitted:
+                if password == CORRECT_PASSWORD:
+                    st.session_state.authenticated = True
+                    st.rerun()
+                else:
+                    st.error("Sandi yang Anda masukkan salah.")
+                    st.session_state.authenticated = False
+
+# --- LOGIKA SESSION STATE & EKSEKUSI ---
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+# Cek status autentikasi
+if st.session_state.authenticated:
+    main_app()
+else:
+    show_login_page()
